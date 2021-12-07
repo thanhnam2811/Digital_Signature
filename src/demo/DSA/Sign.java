@@ -1,19 +1,14 @@
-package demo;
+package demo.DSA;
+
 import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.security.*;
-import java.util.Base64;
 
 import static demo.HashAlgorithm.hashFile;
-import static demo.Verify.verifyFile;
-import static java.lang.Thread.sleep;
 
 public class Sign {
     private final KeyPairGenerator keyGenerator;
@@ -23,7 +18,7 @@ public class Sign {
     private final PrivateKey privateKey;
 
     public Sign(int keyLength) throws NoSuchAlgorithmException {
-        keyGenerator = KeyPairGenerator.getInstance("RSA");
+        keyGenerator = KeyPairGenerator.getInstance("DSA");
         keyGenerator.initialize(keyLength, new SecureRandom());
         keyPair = keyGenerator.generateKeyPair();
         privateKey = keyPair.getPrivate();
@@ -46,15 +41,21 @@ public class Sign {
         String hashString = hashFile(file);
 
         // Encrypt hashFile
-        Cipher cipher = Cipher.getInstance("RSA");
-        cipher.init(Cipher.ENCRYPT_MODE, privateKey);
-        byte[] signatureByte = cipher.doFinal(hashString.getBytes());
-        signature =  Base64.getEncoder().encodeToString(signatureByte);
+//        Cipher cipher = Cipher.getInstance("demo.DSA");
+//        cipher.init(Cipher.ENCRYPT_MODE, privateKey);
+//        byte[] signatureByte = cipher.doFinal(hashString.getBytes());
+//        signature =  Base64.getEncoder().encodeToString(signatureByte);
+
+        Signature signAlgorithm = Signature.getInstance("DSA");
+
+        signAlgorithm.initSign(privateKey);
+        signAlgorithm.update(hashString.getBytes());
+
 
         // Save file
         writeToFile("file/publicKey", publicKey.getEncoded());
         writeToFile("file/privateKey", privateKey.getEncoded());
-        writeToFile("file/signature", signatureByte);
+        writeToFile("file/signature", hashString.getBytes());
     }
 
     public static void main(String[] args) throws Exception {
@@ -62,7 +63,7 @@ public class Sign {
         File file = new File("file/Contract.txt");
 
         // Sign
-        Sign mySign = new Sign(2048);
+        Sign mySign = new Sign(1024);
         mySign.signFile(file);
 
         System.out.println("Ký tên thành công!!!");

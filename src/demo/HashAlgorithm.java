@@ -1,12 +1,27 @@
 package demo;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 
 public class HashAlgorithm {
+    public static String hashFile(File file) throws IOException, NoSuchAlgorithmException {
+        // Use SHA-1 algorithm
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+
+        // Get files byte[]
+        byte[] messageBytes = Files.readAllBytes(file.toPath());
+
+        // Hash
+        byte[] messageHash = digest.digest(messageBytes);
+
+        // Return
+        return Base64.getEncoder().encodeToString(messageHash);
+    }
+/*
     public static String hashFile(File file) throws IOException, NoSuchAlgorithmException {
         // Use SHA-1 algorithm
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
@@ -40,4 +55,6 @@ public class HashAlgorithm {
         // return complete hash
         return sb.toString();
     }
+
+ */
 }
