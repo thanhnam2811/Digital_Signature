@@ -1,4 +1,4 @@
-package demo;
+package DSA;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -20,7 +20,7 @@ public class Verify {
     public static PrivateKey getPrivateKey(String path) throws Exception {
         byte[] keyBytes = Files.readAllBytes(new File(path).toPath());
         PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keyBytes);
-        KeyFactory kf = KeyFactory.getInstance("RSA");
+        KeyFactory kf = KeyFactory.getInstance("DSA");
         return kf.generatePrivate(spec);
     }
 
@@ -28,23 +28,27 @@ public class Verify {
     public static PublicKey getPublicKey(String path) throws Exception {
         byte[] keyBytes = Files.readAllBytes(new File(path).toPath());
         X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
-        KeyFactory kf = KeyFactory.getInstance("RSA");
+        KeyFactory kf = KeyFactory.getInstance("DSA");
         return kf.generatePublic(spec);
     }
 
     // Kiểm tra chữ ký
-    public static boolean verifyFile(File file, PublicKey _publicKey, String _signature) throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException {
+    public static boolean verifyFile(File file, PublicKey _publicKey, byte[] _signature) throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException {
         // Hash file
         String hashFile = hashFile(file);
 
         // Create cipher with public key to decrypt
-        Cipher cipher = Cipher.getInstance("RSA");
-        cipher.init(Cipher.DECRYPT_MODE, _publicKey);
+//        Cipher cipher = Cipher.getInstance("DSA");
+//        cipher.init(Cipher.DECRYPT_MODE, _publicKey);
+
+        Signature verifyAlgorithm  = Signature.getInstance("DSA");
+        verifyAlgorithm.initVerify(_publicKey);
 
         try {
             //Decrypt signature
-            byte[] byteDecrypted = cipher.doFinal(Base64.getDecoder().decode(_signature));
-            String hashFileDecrypted = new String(byteDecrypted);
+        //    byte[] byteDecrypted = cipher.doFinal(Base64.getDecoder().decode(_signature));
+            verifyAlgorithm.update(_signature);
+            String hashFileDecrypted = new String(_signature);
 
             // Verify
             if ( hashFile.equals(hashFileDecrypted) ) {
@@ -54,7 +58,7 @@ public class Verify {
                 System.out.println("Xác nhận không thành công! File có thể đã bị chỉnh sửa!!!");
                 return false;
             }
-        } catch (BadPaddingException | IllegalBlockSizeException e) {
+        } catch (SignatureException e) {
             System.out.println("Xác nhận không thành công! File có thể được gửi từ người khác!!!");
             return false;
         }
@@ -63,7 +67,7 @@ public class Verify {
     // Kiểm tra chữ ký
     public static boolean verifyFile(File file, File _publicKey, File _signature) throws Exception {
        PublicKey pkey = getPublicKey(_publicKey.getPath());
-       String signature = Base64.getEncoder().encodeToString(Files.readAllBytes(_signature.toPath()));
+       byte[] signature = Files.readAllBytes(_signature.toPath());
        return verifyFile(file, pkey, signature);
     }
 
